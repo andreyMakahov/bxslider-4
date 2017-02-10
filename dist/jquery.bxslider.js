@@ -44,6 +44,7 @@
     touchEnabled: true,
     swipeThreshold: 50,
     oneToOneTouch: true,
+    touchMovementLimit: false,
     preventDefaultSwipeX: true,
     preventDefaultSwipeY: false,
 
@@ -168,20 +169,20 @@
       slider.animProp = slider.settings.mode === 'vertical' ? 'top' : 'left';
       // determine if hardware acceleration can be used
       slider.usingCSS = slider.settings.useCSS && slider.settings.mode !== 'fade' && (function() {
-        // create our test div element
-        var div = document.createElement('div'),
-        // css transition properties
-            props = ['WebkitPerspective', 'MozPerspective', 'OPerspective', 'msPerspective'];
-        // test for each property
-        for (var i = 0; i < props.length; i++) {
-          if (div.style[props[i]] !== undefined) {
-            slider.cssPrefix = props[i].replace('Perspective', '').toLowerCase();
-            slider.animProp = '-' + slider.cssPrefix + '-transform';
-            return true;
-          }
-        }
-        return false;
-      }());
+            // create our test div element
+            var div = document.createElement('div'),
+            // css transition properties
+                props = ['WebkitPerspective', 'MozPerspective', 'OPerspective', 'msPerspective'];
+            // test for each property
+            for (var i = 0; i < props.length; i++) {
+              if (div.style[props[i]] !== undefined) {
+                slider.cssPrefix = props[i].replace('Perspective', '').toLowerCase();
+                slider.animProp = '-' + slider.cssPrefix + '-transform';
+                return true;
+              }
+            }
+            return false;
+          }());
       // if vertical mode always make maxSlides and minSlides equal
       if (slider.settings.mode === 'vertical') { slider.settings.maxSlides = slider.settings.minSlides; }
       // save original style data
@@ -412,7 +413,7 @@
 
       if (slider.viewport.css('box-sizing') === 'border-box') {
         height += parseFloat(slider.viewport.css('padding-top')) + parseFloat(slider.viewport.css('padding-bottom')) +
-        parseFloat(slider.viewport.css('border-top-width')) + parseFloat(slider.viewport.css('border-bottom-width'));
+            parseFloat(slider.viewport.css('border-top-width')) + parseFloat(slider.viewport.css('border-bottom-width'));
       } else if (slider.viewport.css('box-sizing') === 'padding-box') {
         height += parseFloat(slider.viewport.css('padding-top')) + parseFloat(slider.viewport.css('padding-bottom'));
       }
@@ -476,7 +477,7 @@
         } else {
           childWidth = slider.children.first().width() + slider.settings.slideMargin;
           slidesShowing = Math.floor((slider.viewport.width() +
-          slider.settings.slideMargin) / childWidth);
+              slider.settings.slideMargin) / childWidth);
         }
         // if "vertical" mode, slides showing will always be minSlides
       } else if (slider.settings.mode === 'vertical') {
@@ -1192,10 +1193,20 @@
         // if horizontal, drag along x axis
         if (slider.settings.mode === 'horizontal') {
           change = touchPoints[0].pageX - slider.touch.start.x;
+
+          if (slider.settings.touchMovementLimit && change) {
+            change = Math.max(Math.min(change, -slider.touch.originalPos.left), - slider.touch.originalPos.left - slider.children.eq(getPagerQty() - 1).position().left);
+          }
+
           value = slider.touch.originalPos.left + change;
           // if vertical, drag along y axis
         } else {
           change = touchPoints[0].pageY - slider.touch.start.y;
+
+          if (slider.settings.touchMovementLimit && change) {
+            change = Math.max(Math.min(change, -slider.touch.originalPos.top), - slider.touch.originalPos.top - slider.children.eq(getPagerQty() - 1).position().top);
+          }
+
           value = slider.touch.originalPos.top + change;
         }
         setPositionProperty(value, 'reset', 0);
