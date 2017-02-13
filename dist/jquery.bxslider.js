@@ -575,7 +575,7 @@
      *  - an optional parameter containing any variables that need to be passed in
      */
     var setPositionProperty = function(value, type, duration, params) {
-      var animateObj, propValue;
+      var animateObj, propValue, animationDuration = duration;
       // use CSS transform
       if (slider.usingCSS) {
         // determine the translate3d value
@@ -584,8 +584,13 @@
         el.css('-' + slider.cssPrefix + '-transition-duration', duration / 1000 + 's');
         if (type === 'slide') {
           // set the property value
+          if (propValue.replace(/(\s|\()0px/g,  '$10') === el[0].style.transform.replace(/(\s|\()0px/g,  '$10')) {
+            animationDuration = 0;
+          }
+
           el.css(slider.animProp, propValue);
-          if (duration !== 0) {
+
+          if (animationDuration !== 0) {
             // bind a callback method - executes when CSS transition completes
             el.bind('transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd', function(e) {
               //make sure it's the correct one
@@ -603,7 +608,7 @@
           // make the transition use 'linear'
           el.css('-' + slider.cssPrefix + '-transition-timing-function', 'linear');
           el.css(slider.animProp, propValue);
-          if (duration !== 0) {
+          if (animationDuration !== 0) {
             el.bind('transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd', function(e) {
               //make sure it's the correct one
               if (!$(e.target).is(el)) { return; }
@@ -624,13 +629,13 @@
         animateObj = {};
         animateObj[slider.animProp] = value;
         if (type === 'slide') {
-          el.animate(animateObj, duration, slider.settings.easing, function() {
+          el.animate(animateObj, animationDuration, slider.settings.easing, function() {
             updateAfterSlideTransition();
           });
         } else if (type === 'reset') {
           el.css(slider.animProp, value);
         } else if (type === 'ticker') {
-          el.animate(animateObj, duration, 'linear', function() {
+          el.animate(animateObj, animationDuration, 'linear', function() {
             setPositionProperty(params.resetValue, 'reset', 0);
             // run the recursive loop after animation
             tickerLoop();
